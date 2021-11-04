@@ -3,8 +3,8 @@ from enum import Enum
 from pydantic import BaseModel
 from pydantic import Field
 from fastapi import FastAPI
+from fastapi import status
 from fastapi import Body, Query, Path
-from pydantic.schema import schema
 
 app = FastAPI()
 
@@ -17,29 +17,20 @@ class HairColor(Enum):
     blonde = "blonde"
     red = "red"
 
-class Person(BaseModel):
-    first_name: str = Field(
-        ...,
-        min_length=2,
-        max_length=50
-        )
-    last_name: str = Field(
-        ...,
-        min_length=2,
-        max_length=50
-        )
-    age: int = Field(
-        ...,
-        gt=0,
-        le=115
-    )
+class Location(BaseModel):
+    city: str
+    state: str
+    country: str
+
+class PersonBase(BaseModel):
+    first_name: str = Field(..., min_length=2, max_length=50)
+    last_name: str = Field(..., min_length=2, max_length=50)
+    age: int = Field(..., gt=0,le=115)
     hair_color: Optional[HairColor] = Field(default=None)
     is_married: Optional[bool] = Field(default=None)
-    password: str = Field(
-        ...,
-        min_length=8
-        )
 
+class Person(PersonBase):
+    password: str = Field(...,min_length=8)
     class Config:
         schema_extra = {
             "example": {
@@ -52,42 +43,32 @@ class Person(BaseModel):
             }
         }
 
-class PersonOuth(BaseModel):
-    first_name: str = Field(
-        ...,
-        min_length=2,
-        max_length=50
-        )
-    last_name: str = Field(
-        ...,
-        min_length=2,
-        max_length=50
-        )
-    age: int = Field(
-        ...,
-        gt=0,
-        le=115
-    )
-    hair_color: Optional[HairColor] = Field(default=None)
-    is_married: Optional[bool] = Field(default=None)
+class PersonOuth(PersonBase):
+    pass
 
-class Location(BaseModel):
-    city: str
-    state: str
-    country: str
 
 # Routes
-@app.get("/")
+@app.get(
+    path="/",
+    status_code=status.HTTP_200_OK
+    )
 def home():
     return {
         "Hello": "World"
     }
 
-@app.post("/person/new", response_model=PersonOuth)
+@app.post(
+    path="/person/new",
+    response_model=PersonOuth,
+    status_code=status.HTTP_201_CREATED
+    )
 def create_person(person: Person = Body(...)):
     return person
 
-@app.get("/person/detail")
+@app.get(
+    path="/person/detail",
+    status_code=status.HTTP_200_OK
+    )
 def show_person(
     name: Optional[str] = Query(
         None,
@@ -104,7 +85,10 @@ def show_person(
 ):
     return {name: age}
 
-@app.get("/person/detail/{person_id}")
+@app.get(
+    path="/person/detail/{person_id}",
+    status_code=status.HTTP_200_OK
+    )
 def show_person(
     person_id: int = Path(
         ...,
@@ -115,7 +99,10 @@ def show_person(
 ):
     return {person_id: "It exists!"}
 
-@app.put("/person/{person_id}")
+@app.put(
+    path="/person/{person_id}",
+    status_code=status.HTTP_202_ACCEPTED
+    )
 def update_person(
     person_id: int = Path(
         ...,
@@ -129,4 +116,4 @@ def update_person(
     results = person.dict()
     results.update(location.dict()) # Combinar dos json
 
-    return results
+0    return results
