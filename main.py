@@ -4,12 +4,11 @@ from pydantic import BaseModel
 from pydantic import Field
 from fastapi import FastAPI
 from fastapi import status
-from fastapi import Body, Query, Path
+from fastapi import Body, Query, Path, Form
 
 app = FastAPI()
 
 # Models
-
 class HairColor(Enum):
     white = "white"
     black = "black"
@@ -46,6 +45,9 @@ class Person(PersonBase):
 class PersonOuth(PersonBase):
     pass
 
+class LoginOuth(BaseModel):
+    username: str = Field(..., min_length=1, max_length=20, example="neotran")
+    message: str = Field(default="Login Succesfully")
 
 # Routes
 @app.get(
@@ -117,3 +119,12 @@ def update_person(
     results.update(location.dict()) # Combinar dos json
 
     return results
+
+# Forms
+@app.post(
+    path="/login",
+    response_model=LoginOuth,
+    status_code=status.HTTP_200_OK
+)
+def login(username: str = Form(...), password: str = Form(...)):
+    return LoginOuth(username=username)
