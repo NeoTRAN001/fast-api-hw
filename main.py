@@ -116,4 +116,4 @@ def update_person(
     results = person.dict()
     results.update(location.dict()) # Combinar dos json
 
-0    return results
+    return results
