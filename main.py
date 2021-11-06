@@ -5,6 +5,7 @@ from pydantic import Field
 from pydantic import EmailStr
 from fastapi import FastAPI
 from fastapi import status
+from fastapi import HTTPException
 from fastapi import Body, Query, Path, Form, Header, Cookie, File, UploadFile
 
 app = FastAPI()
@@ -53,9 +54,11 @@ class LoginOuth(BaseModel):
 # Routes
 @app.get(
     path="/",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Home"]
 )
 def home():
+    """Esto es una documentación de prueba en el home"""
     return {
         "Hello": "World"
     }
@@ -63,14 +66,28 @@ def home():
 @app.post(
     path="/person/new",
     response_model=PersonOuth,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    tags=["Person"],
+    summary="Create Person in the app"
 )
 def create_person(person: Person = Body(...)):
+    """
+    ## Create Person
+    This path operation creates a person in the app and save the information in the dadabase
+    
+    Parameters:
+    - Request body parameter:
+        - **person: Person** -> A person model with first name, lastname, age, hair color and married
+
+    Returns a person model with first name, last name, age, hair color and married
+    """
     return person
 
 @app.get(
     path="/person/detail",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Person"],
+    deprecated=True
 )
 def show_person(
     name: Optional[str] = Query(
@@ -88,23 +105,33 @@ def show_person(
 ):
     return {name: age}
 
+persons = [1,2,3,4,5]
+
 @app.get(
     path="/person/detail/{person_id}",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Person"]
 )
 def show_person(
     person_id: int = Path(
         ...,
         gt=0,
         title="Person ID",
-        description="This is the person ID, It´s required"
+        description="This is the person ID, It´s required",
+        example="2"
         )
 ):
+    if person_id not in persons:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="¡This person doesn´t exist!"
+        )
     return {person_id: "It exists!"}
 
 @app.put(
     path="/person/{person_id}",
-    status_code=status.HTTP_202_ACCEPTED
+    status_code=status.HTTP_202_ACCEPTED,
+    tags=["Person"]
 )
 def update_person(
     person_id: int = Path(
@@ -125,7 +152,8 @@ def update_person(
 @app.post(
     path="/login",
     response_model=LoginOuth,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Login"]
 )
 def login(username: str = Form(...), password: str = Form(...)):
     return LoginOuth(username=username)
@@ -133,7 +161,8 @@ def login(username: str = Form(...), password: str = Form(...)):
 # Cookies and Headers Parameters
 @app.post(
     path="/contact",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=["Contacts"]
 )
 def contact(
     first_name: str = Form(
@@ -158,7 +187,8 @@ def contact(
 
 # Files and Uploadfile
 @app.post(
-    path="/post-image"
+    path="/post-image",
+    tags=["Files"]
 )
 def post_image(
     image: UploadFile = File(...)
